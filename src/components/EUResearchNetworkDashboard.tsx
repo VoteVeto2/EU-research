@@ -16,6 +16,8 @@ import {
   AreaChart,
   Area,
 } from 'recharts';
+import 'katex/dist/katex.min.css'; // Import KaTeX CSS
+import { InlineMath } from 'react-katex'; // Import react-katex component
 
 const EUResearchNetworkDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -180,12 +182,13 @@ const EUResearchNetworkDashboard = () => {
     { degree: '9-16', nodes: 3840 },
     { degree: '17-32', nodes: 3522 },
     { degree: '33-64', nodes: 3018 },
-    { degree: '65-128', nodes: 2408 },
-    { degree: '129-256', nodes: 1506 },
-    { degree: '257-512', nodes: 712 },
-    { degree: '513-1024', nodes: 278 },
-    { degree: '1024+', nodes: 62 },
+    { degree: '65-2⁷', nodes: 2408 },
+    { degree: '129-2⁸', nodes: 1506 },
+    { degree: '257-2⁹', nodes: 712 },
+    { degree: '513-2¹⁰', nodes: 278 },
+    { degree: '> 2¹⁰', nodes: 62 },
   ];
+
 
   // COLORS
   const COLORS = [
@@ -286,12 +289,9 @@ const EUResearchNetworkDashboard = () => {
                 <h4 className="font-medium mb-2">Network Interpretation:</h4>
                 <p className="text-sm text-gray-600">
                   The EU research collaboration network shows very low density
-                  (0.002122) but high average degree (56.48), indicating a
-                  sparse network with concentrated collaboration hubs. The
-                  network appears to follow a power-law degree distribution with
-                  exponent γ ≈ 2.1, suggesting scale-free properties where a
-                  small number of organizations hold a disproportionately large
-                  number of connections. TBD
+                   but high average degree (56.48), indicating a
+                  sparse network with <strong>centralized collaboration hubs</strong>. The
+                  network appears to follow a power-law degree distribution as shown in the right.
                 </p>
               </div>
             </div>
@@ -301,7 +301,23 @@ const EUResearchNetworkDashboard = () => {
               <ResponsiveContainer width="100%" height={250}>
                 <BarChart data={degreeDistribution}>
                   <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="degree" />
+                  <XAxis
+                    dataKey="degree"
+                    tickFormatter={(tick) => {
+                      // Try to match "> LATEX_POWER_OF_2"
+                      let match = tick.match(/^> (2\\\\^\\\\d+|2\\\\^{\\\\d+})$/);
+                      if (match) {
+                        return <>{'> '}<InlineMath math={match[1]} /></>;
+                      }
+                      // Try to match "PREFIX-LATEX_POWER_OF_2"
+                      match = tick.match(/^(\\\\d+-)(2\\\\^\\\\d+|2\\\\^{\\\\d+})$/);
+                      if (match) {
+                        return <>{match[1]}<InlineMath math={match[2]} /></>;
+                      }
+                      // Default: return the tick as is
+                      return tick;
+                    }}
+                  />
                   <YAxis />
                   <Tooltip />
                   <Bar dataKey="nodes" fill="#8884d8" />
@@ -310,11 +326,8 @@ const EUResearchNetworkDashboard = () => {
 
               <div className="mt-4">
                 <p className="text-sm text-gray-600">
-                  The log-binned degree distribution follows a power law,
-                  characteristic of scale-free networks. This indicates
-                  preferential attachment where new organizations tend to
-                  collaborate with already well-connected institutions, creating
-                  hub-like structures in the network.
+                  The log-binned degree distribution follows a power law. One potential reason behind is that 
+                  <strong> new organizations tend to collaborate with already well-connected institutions. </strong>
                 </p>
               </div>
             </div>
@@ -391,8 +404,7 @@ const EUResearchNetworkDashboard = () => {
               <h4 className="font-medium mb-2">Mathematical Insights:</h4>
               <p className="text-sm text-gray-600">
                 The distribution of organizations per project follows a
-                right-skewed distribution with significant positive skewness (γ{' '}
-                {'>'} 2), indicating that while most projects have few
+                right-skewed distribution with significant positive skewness, indicating that while most projects have few
                 organizations (45% have only 1), there is a long tail of highly
                 collaborative projects. This distribution can be modeled as a
                 negative binomial or log-normal distribution rather than a
@@ -513,9 +525,7 @@ const EUResearchNetworkDashboard = () => {
                 <li>
                   <strong>Tier 1 (Super-connectors):</strong> The top 10
                   organizations each connect to 2,800+ partners, forming the
-                  core of the EU research network. These organizations follow
-                  the relation D(k) ~ k<sup>-2.1</sup>, where D(k) is the
-                  fraction of nodes with degree k.
+                  core of the EU research network.
                 </li>
                 <li>
                   <strong>Tier 2 (Major hubs):</strong> ~250 organizations with
@@ -651,21 +661,13 @@ const EUResearchNetworkDashboard = () => {
               </p>
               <ul className="list-disc pl-5 text-sm space-y-1 mt-2">
                 <li>
-                  The matrix is dense rather than sparse, with non-zero values
-                  for most country pairs, indicating widespread international
-                  collaboration.
+                  The matrix
                 </li>
                 <li>
-                  Collaboration intensity follows a gravity-like model: C
-                  <sub>ij</sub> ~ (P<sub>i</sub> × P<sub>j</sub>)/D<sub>ij</sub>
-                  <sup>α</sup>, where C<sub>ij</sub> is the collaboration count
-                  between countries i and j, P is participation count, and D is
-                  some form of distance (geographical, cultural, or economic).
+                  Collaboration intensity
                 </li>
                 <li>
-                  The exponent α appears to be relatively small (≈0.3),
-                  indicating that distance is only a weak predictor of
-                  collaboration intensity in EU research.
+                  The exponent <InlineMath math="\alpha" /> 
                 </li>
                 <li>
                   The eigenvector centrality of the country collaboration matrix
@@ -715,10 +717,8 @@ const EUResearchNetworkDashboard = () => {
             <div className="space-y-4">
               <h4 className="font-medium">Topic Bipartite Network Analysis</h4>
               <p className="text-sm text-gray-600">
-                Research topics and projects form a bipartite network B, where B
-                <sub>ij</sub> = 1 if project i includes topic j. From this, we
-                can derive the topic similarity matrix T = B<sup>T</sup>B, where
-                T<sub>ij</sub> represents the number of projects that include
+                Research topics and projects form a bipartite network B, where <InlineMath math="B_{ij} = 1" /> if project i includes topic j. From this, we
+                can derive the topic similarity matrix <InlineMath math="T = B^T B" />, where <InlineMath math="T_{ij}" /> represents the number of projects that include
                 both topics i and j.
               </p>
 
@@ -726,11 +726,7 @@ const EUResearchNetworkDashboard = () => {
                 <h4 className="font-medium">Key Mathematical Insights:</h4>
                 <ul className="list-disc pl-5 text-sm space-y-2">
                   <li>
-                    <strong>Modular Structure:</strong> The topic network shows
-                    clear modular structure with high internal connectivity
-                    within topic clusters and lower connectivity between
-                    clusters. The modularity coefficient Q ≈ 0.68 indicates
-                    strong community structure.
+                    <strong>Modular Structure:</strong> 
                   </li>
                   <li>
                     <strong>Topic Clusters:</strong> Spectral clustering of the
@@ -748,11 +744,7 @@ const EUResearchNetworkDashboard = () => {
                     </ul>
                   </li>
                   <li>
-                    <strong>Core-Periphery Structure:</strong> The topic network
-                    shows a core-periphery structure where a few central topics
-                    (e.g., ERC grants, MSCA actions) connect to many specialized
-                    peripheral topics. This structure is characterized by a high
-                    eigenvector centralization index (ECI ≈ 0.76).
+                    <strong>Core-Periphery Structure:</strong> (<InlineMath math="ECI \approx 0.76" />).
                   </li>
                 </ul>
               </div>
@@ -824,11 +816,8 @@ const EUResearchNetworkDashboard = () => {
 
               <div className="mt-4">
                 <p className="text-sm text-gray-600">
-                  Project durations show a bimodal distribution with peaks at
-                  12-24 months (30.7%) and 48-60 months (26.5%). This reflects
-                  the different funding instruments, with shorter projects
-                  typically being fellowships or proof-of-concept grants, and
-                  longer projects representing major research initiatives.
+                  Project durations show with peaks at
+                  12-24 months (30.7%) and 48-60 months (26.5%).
                 </p>
               </div>
             </div>
@@ -873,13 +862,13 @@ const EUResearchNetworkDashboard = () => {
                 </p>
                 <ul className="list-disc pl-5 text-sm mt-2 space-y-1">
                   <li>
-                    Power-law exponent: α ≈ 1.3, indicating an extremely
+                    Power-law exponent: <InlineMath math = "\alpha \approx 1.3"/>, indicating an extremely
                     heavy-tailed distribution where a small number of projects
                     receive a disproportionately large share of funding.
                   </li>
                   <li>
                     The top 10% of projects receive approximately 80% of the
-                    total funding, closely following the 80/20 Pareto principle.
+                    total funding. 
                   </li>
                   <li>
                     The large difference between mean (€104M) and median (€2.3M)
