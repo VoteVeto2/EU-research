@@ -24,12 +24,10 @@ const EUResearchNetworkDashboard = () => {
 
   // Network metrics data from our analysis
   const networkMetrics = [
-    { name: 'Organizations(Nodes)', value: 26498 },
-    { name: 'Collaborations(Edges)', value: 751285 },
+    { name: 'Organizations(Nodes)', value: 27224 },
+    { name: 'Collaborations(Edges)', value: 751350 },
     { name: 'Average Degree', value: 56.48 },
     { name: 'Maximum Degree', value: 5310 },
-    { name: 'Projects', value: 15341 },
-    { name: 'Collaborative Projects', value: 8401 },
   ];
 
   // Top organizations by degree (most connected)
@@ -51,46 +49,39 @@ const EUResearchNetworkDashboard = () => {
     {
       name: 'DE',
       participations: 11264,
-      coordinators: 2114,
       funding: 7143895811,
     },
     {
       name: 'ES',
       participations: 11234,
-      coordinators: 1980,
       funding: 4525546554,
     },
     {
       name: 'IT',
       participations: 9730,
-      coordinators: 1571,
       funding: 3810963991,
     },
     {
       name: 'FR',
       participations: 9380,
-      coordinators: 1654,
       funding: 5005580743,
     },
     {
       name: 'NL',
       participations: 6319,
-      coordinators: 1265,
       funding: 3791088379,
     },
     {
       name: 'BE',
       participations: 5576,
-      coordinators: 883,
       funding: 3394415000,
     },
     {
       name: 'EL',
       participations: 4498,
-      coordinators: 542,
       funding: 1677250792,
     },
-    { name: 'UK', participations: 4310, coordinators: 101, funding: 417174489 },
+    { name: 'UK', participations: 4310, funding: 417174489 },
   ];
 
   // Country collaboration data
@@ -152,18 +143,7 @@ const EUResearchNetworkDashboard = () => {
     { name: 'MSCA Doctoral Networks 2021', projects: 152 },
   ];
 
-  // Funding scheme data
-  const fundingSchemeData = [
-    { name: 'HORIZON-RIA', projects: 2291, funding: 569002608327 },
-    { name: 'HORIZON-IA', projects: 915, funding: 402820176714 },
-    { name: 'HORIZON-JU-RIA', projects: 360, funding: 163120538507 },
-    { name: 'HORIZON-JU-IA', projects: 138, funding: 156877202918 },
-    { name: 'HORIZON-CSA', projects: 1279, funding: 87498855257 },
-    { name: 'HORIZON-EIT-KIC', projects: 17, funding: 81039993443 },
-    { name: 'HORIZON-COFUND', projects: 25, funding: 60590437410 },
-    { name: 'HORIZON-EIC', projects: 485, funding: 54817216562 },
-  ];
-
+  
   // Project duration data
   const durationData = [
     { name: '< 1 year', projects: 249, percent: 1.62 },
@@ -220,16 +200,7 @@ const EUResearchNetworkDashboard = () => {
           >
             Network Overview
           </button>
-          <button
-            className={`py-2 px-4 font-medium whitespace-nowrap ${
-              activeTab === 'organizations'
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-gray-500'
-            }`}
-            onClick={() => setActiveTab('organizations')}
-          >
-            Organizations
-          </button>
+         
           <button
             className={`py-2 px-4 font-medium whitespace-nowrap ${
               activeTab === 'countries'
@@ -250,16 +221,7 @@ const EUResearchNetworkDashboard = () => {
           >
             Research Topics
           </button>
-          <button
-            className={`py-2 px-4 font-medium whitespace-nowrap ${
-              activeTab === 'funding'
-                ? 'text-blue-600 border-b-2 border-blue-600'
-                : 'text-gray-500'
-            }`}
-            onClick={() => setActiveTab('funding')}
-          >
-            Funding
-          </button>
+          
         </div>
       </div>
 
@@ -370,59 +332,12 @@ const EUResearchNetworkDashboard = () => {
               </BarChart>
             </ResponsiveContainer>
           </div>
-
-          <div className="bg-white rounded-lg shadow p-4">
-            <h3 className="text-lg font-medium mb-4">
-              Project Collaboration Structure
-            </h3>
-
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={orgsPerProjectData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis
-                  dataKey="range"
-                  label={{
-                    value: 'Organizations per Project',
-                    position: 'insideBottom',
-                    offset: -5,
-                  }}
-                />
-                <YAxis
-                  label={{
-                    value: 'Number of Projects',
-                    angle: -90,
-                    position: 'insideLeft',
-                    offset: -5,
-                  }}
-                />
-                <Tooltip />
-                <Bar dataKey="count" fill="#8884d8" />
-              </BarChart>
-            </ResponsiveContainer>
-
-            <div className="mt-4">
-              <h4 className="font-medium mb-2">Mathematical Insights:</h4>
-              <p className="text-sm text-gray-600">
-                The distribution of organizations per project follows a
-                right-skewed distribution with significant positive skewness, indicating that while most projects have few
-                organizations (45% have only 1), there is a long tail of highly
-                collaborative projects. This distribution can be modeled as a
-                negative binomial or log-normal distribution rather than a
-                Poisson process, suggesting clustered collaboration patterns.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'organizations' && (
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Organization Analysis</h2>
-
+          <div>
+      
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div className="bg-white rounded-lg shadow p-4">
               <h3 className="text-lg font-medium mb-4">Organization Types</h3>
-
+      
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
@@ -454,7 +369,7 @@ const EUResearchNetworkDashboard = () => {
                   />
                 </PieChart>
               </ResponsiveContainer>
-
+      
               <div className="mt-4">
                 <p className="text-sm text-gray-600">
                   Higher Education institutions (HES) make up the largest
@@ -464,94 +379,51 @@ const EUResearchNetworkDashboard = () => {
                 </p>
               </div>
             </div>
-
+      
             <div className="bg-white rounded-lg shadow p-4">
               <h3 className="text-lg font-medium mb-4">
-                Project Coordinator Types
+                Organization Network Roles
               </h3>
-
-              <ResponsiveContainer width="100%" height={300}>
-                <PieChart>
-                  <Pie
-                    data={coordinatorTypeData}
-                    cx="50%"
-                    cy="50%"
-                    labelLine={true}
-                    outerRadius={100}
-                    fill="#8884d8"
-                    dataKey="value"
-                    label={({ name, percent }) =>
-                      `${name.split(' ')[0]}: ${(percent * 100).toFixed(0)}%`
-                    }
-                  >
-                    {coordinatorTypeData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    formatter={(value) =>
-                      `${value.toLocaleString()} coordinators`
-                    }
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-
-              <div className="mt-4">
-                <p className="text-sm text-gray-600">
-                  Higher Education institutions dominate the coordinator role
-                  even more strongly than their participation rate, leading
-                  56.6% of projects, followed by Research Organizations at 28.3%
-                  and Private Companies at 12.0%.
+      
+              <div className="mb-4">
+                <h4 className="font-medium">Key Insights</h4>
+                <p className="text-sm text-gray-600 mb-2">
+                  The network shows distinct tiers of organizations based on their
+                  connectivity:
+                </p>
+                <ul className="list-disc pl-5 text-sm space-y-2">
+                  <li>
+                    <strong>Tier 1 (Super-connectors):</strong> The top 10
+                    organizations each connect to 2,800+ partners, forming the
+                    core of the EU research network.
+                  </li>
+                  <li>
+                    <strong>Tier 2 (Major hubs):</strong> ~250 organizations with
+                    500-2,800 connections each, serving as sectoral or regional
+                    hubs.
+                  </li>
+                  <li>
+                    <strong>Tier 3 (Active collaborators):</strong> ~3,000
+                    organizations with 100-500 connections, representing active
+                    but specialized research entities.
+                  </li>
+                  <li>
+                    <strong>Tier 4 (Peripheral participants):</strong> The
+                    remaining organizations with fewer than 100 connections,
+                    predominantly participating in fewer projects.
+                  </li>
+                </ul>
+                <p className="text-sm text-gray-600 mt-2">
+                  This tiered structure creates a hierarchical network with high
+                  assortativity, where Tier 1 organizations connect extensively
+                  with other Tier 1 and Tier 2 organizations, forming a densely
+                  connected core surrounded by progressively sparser shells of
+                  connectivity.
                 </p>
               </div>
             </div>
           </div>
-
-          <div className="bg-white rounded-lg shadow p-4">
-            <h3 className="text-lg font-medium mb-4">
-              Organization Network Roles
-            </h3>
-
-            <div className="mb-4">
-              <h4 className="font-medium">Key Mathematical Insights</h4>
-              <p className="text-sm text-gray-600 mb-2">
-                The network shows distinct tiers of organizations based on their
-                connectivity:
-              </p>
-              <ul className="list-disc pl-5 text-sm space-y-2">
-                <li>
-                  <strong>Tier 1 (Super-connectors):</strong> The top 10
-                  organizations each connect to 2,800+ partners, forming the
-                  core of the EU research network.
-                </li>
-                <li>
-                  <strong>Tier 2 (Major hubs):</strong> ~250 organizations with
-                  500-2,800 connections each, serving as sectoral or regional
-                  hubs.
-                </li>
-                <li>
-                  <strong>Tier 3 (Active collaborators):</strong> ~3,000
-                  organizations with 100-500 connections, representing active
-                  but specialized research entities.
-                </li>
-                <li>
-                  <strong>Tier 4 (Peripheral participants):</strong> The
-                  remaining organizations with fewer than 100 connections,
-                  predominantly participating in fewer projects.
-                </li>
-              </ul>
-              <p className="text-sm text-gray-600 mt-2">
-                This tiered structure creates a hierarchical network with high
-                assortativity, where Tier 1 organizations connect extensively
-                with other Tier 1 and Tier 2 organizations, forming a densely
-                connected core surrounded by progressively sparser shells of
-                connectivity.
-              </p>
-            </div>
-          </div>
+        </div>
         </div>
       )}
 
@@ -573,16 +445,10 @@ const EUResearchNetworkDashboard = () => {
                   <XAxis dataKey="name" />
                   <YAxis />
                   <Tooltip />
-                  <Legend />
                   <Bar
                     dataKey="participations"
                     fill="#8884d8"
                     name="Participations"
-                  />
-                  <Bar
-                    dataKey="coordinators"
-                    fill="#82ca9d"
-                    name="Coordinators"
                   />
                 </BarChart>
               </ResponsiveContainer>
@@ -653,7 +519,7 @@ const EUResearchNetworkDashboard = () => {
 
             <div className="mt-6">
               <h4 className="font-medium mb-2">
-                Mathematical Insights on Country Collaboration Structure:
+                Insights on Country Collaboration Structure:
               </h4>
               <p className="text-sm text-gray-600">
                 The country collaboration matrix exhibits interesting
@@ -703,98 +569,13 @@ const EUResearchNetworkDashboard = () => {
               <p className="text-sm text-gray-600">
                 ERC Starting Grants dominate the research landscape with 1,734
                 projects, followed by various Marie Skłodowska-Curie Actions
-                (MSCA) postdoctoral fellowships. The European Research Council
-                (ERC) grant mechanisms occupy 4 of the top 10 spots.
+                (MSCA) postdoctoral fellowships. 
               </p>
             </div>
           </div>
 
           <div className="bg-white rounded-lg shadow p-4">
-            <h3 className="text-lg font-medium mb-4">
-              Research Topics Network Structure
-            </h3>
-
-            <div className="space-y-4">
-              <h4 className="font-medium">Topic Bipartite Network Analysis</h4>
-              <p className="text-sm text-gray-600">
-                Research topics and projects form a bipartite network B, where <InlineMath math="B_{ij} = 1" /> if project i includes topic j. From this, we
-                can derive the topic similarity matrix <InlineMath math="T = B^T B" />, where <InlineMath math="T_{ij}" /> represents the number of projects that include
-                both topics i and j.
-              </p>
-
-              <div className="mt-4">
-                <h4 className="font-medium">Key Mathematical Insights:</h4>
-                <ul className="list-disc pl-5 text-sm space-y-2">
-                  <li>
-                    <strong>Modular Structure:</strong> 
-                  </li>
-                  <li>
-                    <strong>Topic Clusters:</strong> Spectral clustering of the
-                    topic similarity matrix reveals distinct research
-                    communities:
-                    <ul className="list-circle pl-4 mt-1">
-                      <li>
-                        ERC funding instruments (Starting, Consolidator,
-                        Advanced Grants)
-                      </li>
-                      <li>MSCA training and mobility programs</li>
-                      <li>Innovation and industry-focused topics</li>
-                      <li>Climate and sustainability research</li>
-                      <li>Health and biomedical topics</li>
-                    </ul>
-                  </li>
-                  <li>
-                    <strong>Core-Periphery Structure:</strong> (<InlineMath math="ECI \approx 0.76" />).
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {activeTab === 'funding' && (
-        <div>
-          <h2 className="text-xl font-semibold mb-4">Funding Analysis</h2>
-
-          <div className="bg-white rounded-lg shadow p-4 mb-8">
-            <h3 className="text-lg font-medium mb-4">Funding by Scheme</h3>
-
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={fundingSchemeData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis
-                  tickFormatter={(value) =>
-                    `€${(value / 1000000000).toFixed(0)}B`
-                  }
-                />
-                <Tooltip
-                  formatter={(value) => `€${(value / 1000000000).toFixed(2)}B`}
-                />
-                <Legend />
-                <Bar
-                  dataKey="funding"
-                  fill="#8884d8"
-                  name="EC Contribution (€)"
-                />
-              </BarChart>
-            </ResponsiveContainer>
-
-            <div className="mt-4">
-              <p className="text-sm text-gray-600">
-                HORIZON-RIA (Research and Innovation Actions) receives the
-                highest funding at €569 billion, followed by HORIZON-IA
-                (Innovation Actions) at €403 billion. The funding distribution
-                is highly skewed, with large differences between funding
-                schemes.
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-lg shadow p-4">
-              <h3 className="text-lg font-medium mb-4">
+             <h3 className="text-lg font-medium mb-4">
                 Project Duration Distribution
               </h3>
 
@@ -815,77 +596,17 @@ const EUResearchNetworkDashboard = () => {
               </ResponsiveContainer>
 
               <div className="mt-4">
-                <p className="text-sm text-gray-600">
-                  Project durations show with peaks at
-                  12-24 months (30.7%) and 48-60 months (26.5%).
-                </p>
-              </div>
+              <p className="text-sm text-gray-600">
+                During this funding period, the majority of projects (30.7%) last for 1-2 years. Only 1.6% of projects are shorter than 1 year, while 1.4% exceed 5 years.
+              </p>
             </div>
+            
 
-            <div className="bg-white rounded-lg shadow p-4">
-              <h3 className="text-lg font-medium mb-4">
-                Funding Distribution Analysis
-              </h3>
-
-              <ul className="space-y-3">
-                <li className="flex justify-between">
-                  <span className="text-gray-600">Total funding:</span>
-                  <span className="font-medium">€1.6 trillion</span>
-                </li>
-                <li className="flex justify-between">
-                  <span className="text-gray-600">Average per project:</span>
-                  <span className="font-medium">€104 million</span>
-                </li>
-                <li className="flex justify-between">
-                  <span className="text-gray-600">Median per project:</span>
-                  <span className="font-medium">€2.3 million</span>
-                </li>
-                <li className="flex justify-between">
-                  <span className="text-gray-600">Gini coefficient:</span>
-                  <span className="font-medium">0.852</span>
-                </li>
-                <li className="flex justify-between">
-                  <span className="text-gray-600">
-                    Coefficient of variation:
-                  </span>
-                  <span className="font-medium">7.94</span>
-                </li>
-              </ul>
-
-              <div className="mt-6">
-                <h4 className="font-medium">
-                  Mathematical Insights on Funding Distribution:
-                </h4>
-                <p className="text-sm text-gray-600 mt-2">
-                  The funding follows a highly skewed Pareto-like distribution
-                  with estimated parameters:
-                </p>
-                <ul className="list-disc pl-5 text-sm mt-2 space-y-1">
-                  <li>
-                    Power-law exponent: <InlineMath math = "\alpha \approx 1.3"/>, indicating an extremely
-                    heavy-tailed distribution where a small number of projects
-                    receive a disproportionately large share of funding.
-                  </li>
-                  <li>
-                    The top 10% of projects receive approximately 80% of the
-                    total funding. 
-                  </li>
-                  <li>
-                    The large difference between mean (€104M) and median (€2.3M)
-                    funding reflects this extreme skewness.
-                  </li>
-                  <li>
-                    The high Gini coefficient (0.852) confirms severe inequality
-                    in funding allocation, which is intentional by design to
-                    support both large flagship initiatives and smaller targeted
-                    projects.
-                  </li>
-                </ul>
-              </div>
-            </div>
+            
           </div>
         </div>
       )}
+
     </div>
   );
 };
