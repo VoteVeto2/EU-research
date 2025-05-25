@@ -83,6 +83,9 @@ interface AnimatedBarChartProps {
   height?: number;
   color?: string;
   customXAxisTick?: boolean;
+  labelPrefix?: string;
+  valueLabel?: string;
+  showInBillions?: boolean;
   [key: string]: any;
 }
 
@@ -161,7 +164,7 @@ const EUResearchNetworkDashboard = () => {
     { name: 'Organizations(Nodes)', value: 27224, icon: 'business' },
     { name: 'Collaborations(Edges)', value: 751350, icon: 'share' },
     { name: 'Average Degree', value: 56.48, icon: 'hub' },
-    { name: 'Maximum Degree', value: 5310, icon: 'star' },
+    { name: 'Maximum Degree', value: 5312, icon: 'star' },
   ];
 
   // Top organizations by degree (most connected)
@@ -315,7 +318,7 @@ const EUResearchNetworkDashboard = () => {
   };
 
   // Custom chart components with animations
-  const AnimatedBarChart = ({ data, dataKey, xAxisKey, height = 300, color = "#82ca9d", customXAxisTick = false, ...props }: AnimatedBarChartProps) => {
+  const AnimatedBarChart = ({ data, dataKey, xAxisKey, height = 300, color = "#82ca9d", customXAxisTick = false, labelPrefix = "", valueLabel = "Value", showInBillions = false, ...props }: AnimatedBarChartProps) => {
     const chartRef = useRef(null);
     const isInView = useInView(chartRef, { once: false });
     
@@ -334,7 +337,10 @@ const EUResearchNetworkDashboard = () => {
               dataKey={xAxisKey} 
               tick={customXAxisTick ? <CustomTick /> : { fill: '#666', fontSize: 12 }} 
             />
-            <YAxis tick={{ fill: '#666', fontSize: 12 }} />
+            <YAxis 
+              tick={{ fill: '#666', fontSize: 12 }} 
+              tickFormatter={showInBillions ? (value: any) => `${(Number(value) / 1000000000).toFixed(1)}B` : undefined}
+            />
             <Tooltip 
               contentStyle={{ 
                 backgroundColor: 'rgba(255, 255, 255, 0.95)', 
@@ -342,20 +348,26 @@ const EUResearchNetworkDashboard = () => {
                 boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)', 
                 border: 'none' 
               }} 
-              formatter={(value: any, name: any) => [
-                `${Number(value).toLocaleString()} nodes`,
-                'Count'
-              ]}
+              formatter={(value: any, name: any) => {
+                if (showInBillions) {
+                  const billionValue = (Number(value) / 1000000000).toFixed(2);
+                  return [`${billionValue}B ${valueLabel.includes('€') ? '€' : ''}`, valueLabel.replace('€', '').trim()];
+                }
+                return [
+                  `${Number(value).toLocaleString()}${valueLabel.includes('€') ? '' : ` ${valueLabel.toLowerCase()}`}`,
+                  valueLabel
+                ];
+              }}
               labelFormatter={(label: any) => {
                 if (typeof label === 'string' && label.includes('^')) {
                   return (
                     <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <span>Degree range: </span>
+                      <span>{labelPrefix} </span>
                       <InlineMath math={label} />
                     </div>
                   );
                 }
-                return `Degree range: ${label}`;
+                return `${labelPrefix}${label}`;
               }}
             />
             <Bar dataKey={dataKey} fill={color} radius={[4, 4, 0, 0]} />
@@ -598,8 +610,7 @@ const EUResearchNetworkDashboard = () => {
                 <div className="flex items-start">
                   <span className="material-icons text-amber-600 mr-3 text-3xl">trending_up</span>
                   <p className="text-gray-600">
-                    The network appears to follow a power-law degree distribution, suggesting a preferential attachment mechanism
-                    where new organizations tend to collaborate with already well-connected institutions.
+                    The network appears to follow a <strong>power-law degree distribution</strong>, suggesting new organizations tend to collaborate with already well-connected institutions.
                   </p>
                 </div>
               </BentoCard>
@@ -611,6 +622,9 @@ const EUResearchNetworkDashboard = () => {
                   dataKey="nodes" 
                   xAxisKey="degree" 
                   color="#8884d8"
+                  customXAxisTick={true}
+                  labelPrefix="Degree range: "
+                  valueLabel="Nodes"
                 />
               </BentoCard>
             </div>
@@ -619,9 +633,8 @@ const EUResearchNetworkDashboard = () => {
             <BentoCard size="full" className="mb-12">
               <h3 className="text-2xl font-bold mb-4 text-gray-800">Top 10 Organizations by Connections</h3>
               <p className="text-gray-600 mb-6">
-                Degree centrality measures the number of direct connections an
-                organization has in the network. These organizations are the most
-                connected hubs in the EU research ecosystem.
+                These organizations are the most connected hubs in the EU research ecosystem. 
+                German institution <strong>Fraunhofer-Gesellschaft</strong> leads with 5,312 connections, while <strong>KU Leuven </strong> ranks the fifth with 3,467 connections.
               </p>
               <AnimatedBarChart 
                 data={topOrganizations} 
@@ -629,6 +642,8 @@ const EUResearchNetworkDashboard = () => {
                 xAxisKey="name" 
                 color="#82ca9d"
                 height={350}
+                labelPrefix="Organization: "
+                valueLabel="Connections"
               />
             </BentoCard>
             
@@ -713,6 +728,8 @@ const EUResearchNetworkDashboard = () => {
                 xAxisKey="name" 
                 color="#0088FE"
                 height={350}
+                labelPrefix="Country: "
+                valueLabel="Participations"
               />
             </BentoCard>
             
@@ -725,6 +742,9 @@ const EUResearchNetworkDashboard = () => {
                   dataKey="funding" 
                   xAxisKey="name" 
                   color="#00C49F"
+                  labelPrefix="Country: "
+                  valueLabel="Funding"
+                  showInBillions={true}
                 />
               </BentoCard>
               
@@ -735,6 +755,8 @@ const EUResearchNetworkDashboard = () => {
                   dataKey="value" 
                   xAxisKey="name" 
                   color="#FFBB28"
+                  labelPrefix="Collaboration: "
+                  valueLabel="Joint Projects"
                 />
               </BentoCard>
             </div>
@@ -788,6 +810,8 @@ const EUResearchNetworkDashboard = () => {
                 xAxisKey="name" 
                 color="#8884d8"
                 height={350}
+                labelPrefix="Topic: "
+                valueLabel="Projects"
               />
             </BentoCard>
             
@@ -809,6 +833,8 @@ const EUResearchNetworkDashboard = () => {
                   dataKey="count" 
                   xAxisKey="range" 
                   color="#FF8042"
+                  labelPrefix="Project size: "
+                  valueLabel="Projects"
                 />
               </BentoCard>
             </div>
