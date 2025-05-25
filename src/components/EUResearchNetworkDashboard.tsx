@@ -381,6 +381,9 @@ const EUResearchNetworkDashboard = () => {
     const chartRef = useRef(null);
     const isInView = useInView(chartRef, { once: false });
     
+    // Calculate total for percentage calculation
+    const total = data.reduce((sum, item) => sum + Number(item[dataKey]), 0);
+    
     return (
       <motion.div 
         ref={chartRef}
@@ -400,7 +403,11 @@ const EUResearchNetworkDashboard = () => {
               fill="#8884d8"
               dataKey={dataKey}
               nameKey={nameKey}
-              label={({ name, percent }: any) => `${name.split(' ')[0]}: ${(percent * 100).toFixed(0)}%`}
+              label={({ name, percent, payload }: any) => {
+                // Use the percent field from data if available, otherwise calculate from recharts percent
+                const displayPercent = payload.percent !== undefined ? payload.percent : (percent * 100);
+                return `${name}: ${displayPercent.toFixed(1)}%`;
+              }}
             >
               {data.map((entry: any, index: number) => (
                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
@@ -413,7 +420,16 @@ const EUResearchNetworkDashboard = () => {
                 boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)', 
                 border: 'none' 
               }}
-              formatter={(value: any) => `${Number(value).toLocaleString()} organizations (${((Number(value) / 100249) * 100).toFixed(2)}%)`}
+              formatter={(value: any, name: any, props: any) => {
+                const percentage = props.payload.percent !== undefined 
+                  ? props.payload.percent.toFixed(2)
+                  : ((Number(value) / total) * 100).toFixed(2);
+                
+                // Determine the unit based on the data
+                const unit = dataKey === 'projects' ? 'projects' : 'organizations';
+                
+                return [`${Number(value).toLocaleString()} ${unit} (${percentage}%)`, name];
+              }}
             />
           </PieChart>
         </ResponsiveContainer>
@@ -610,7 +626,7 @@ const EUResearchNetworkDashboard = () => {
                 <div className="flex items-start">
                   <span className="material-icons text-amber-600 mr-3 text-3xl">trending_up</span>
                   <p className="text-gray-600">
-                    The network appears to follow a <strong>power-law degree distribution</strong>, suggesting new organizations tend to collaborate with already well-connected institutions.
+                    The network appears to follow a <strong>power-law degree distribution</strong>, suggesting new organizations tend to collaborate with hub institutions.
                   </p>
                 </div>
               </BentoCard>
@@ -869,7 +885,7 @@ const EUResearchNetworkDashboard = () => {
                   </div>
                   <div>
                     <h4 className="font-bold text-lg text-gray-800">Duration Patterns</h4>
-                    <p className="text-gray-600">Most projects (30.7%) last 1-2 years, with another significant portion (26.5%) lasting 4-5 years, reflecting different funding instrument timeframes.</p>
+                    <p className="text-gray-600">Most projects (30.7%) last 1-2 years, with another significant portion (26.5%) lasting 4-5 years.</p>
                   </div>
                 </div>
                 
