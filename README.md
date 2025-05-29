@@ -64,6 +64,7 @@ This project visualizes the complex network of research collaborations statistic
 4. **Access the platform:**
    - Open your browser to `http://localhost:5173/`
 
+## 📊 Dataset Structure
 ```
 EU-research/
 ├── src/

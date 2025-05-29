@@ -6,21 +6,16 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
   PieChart,
   Pie,
   Cell,
-  LineChart,
-  Line,
-  AreaChart,
-  Area,
 } from 'recharts';
 import 'katex/dist/katex.min.css';
 import { InlineMath } from 'react-katex';
 import { motion, useInView, useAnimation } from "framer-motion";
 
-// TypeScript interfaces for better type safety
+// TypeScript interfaces 
 interface NetworkMetric {
   name: string;
   value: number;
@@ -50,10 +45,6 @@ interface OrgTypeData {
   percent: number;
 }
 
-interface CoordinatorTypeData {
-  name: string;
-  value: number;
-}
 
 interface OrgsPerProjectData {
   range: string;
@@ -114,14 +105,21 @@ interface StatDisplayProps {
   label: string;
   value: number;
   icon: string;
-  color?: 'blue' | 'green' | 'amber' | 'purple' | 'pink';
+  color?: 'blue' | 'green' | 'amber' | 'purple' | 'pink' | 'cyan';
+  formula?: string;
 }
 
 const EUResearchNetworkDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [isLoading, setIsLoading] = useState(true);
+  const [hoveredCard, setHoveredCard] = useState<string | null>(null);
   const scrollRef = useRef(null);
   const controls = useAnimation();
 
+  useEffect(() => {
+    setTimeout(() => setIsLoading(false), 1500);
+  }, []);
+  
   // Animation variants for scroll-triggered animations
   const fadeInUp = {
     hidden: { opacity: 0, y: 60 },
@@ -145,21 +143,7 @@ const EUResearchNetworkDashboard = () => {
     }
   };
 
-  // Animation hook for section visibility
-  const useAnimateOnScroll = (threshold = 0.1) => {
-    const ref = useRef(null);
-    const isInView = useInView(ref, { once: false });
-    
-    useEffect(() => {
-      if (isInView) {
-        controls.start("visible");
-      }
-    }, [isInView, controls]);
-    
-    return { ref, controls, variants: fadeInUp };
-  };
-
-  // Network metrics data from our analysis
+  // Network metrics data 
   const networkMetrics: NetworkMetric[] = [
     { name: 'Organizations(Nodes)', value: 27224, icon: 'business' },
     { name: 'Collaborations(Edges)', value: 751350, icon: 'share' },
@@ -167,7 +151,7 @@ const EUResearchNetworkDashboard = () => {
     { name: 'Maximum Degree', value: 5312, icon: 'star' },
   ];
 
-  // Top organizations by degree (most connected)
+  // Top organizations by degree
   const topOrganizations: Organization[] = [
     { name: 'FRAUNHOFER GESELLSCHAFT', country: 'DE', degree: 5312 },
     { name: 'CSIC', country: 'ES', degree: 4104 },
@@ -209,20 +193,11 @@ const EUResearchNetworkDashboard = () => {
 
   // Organization type data
   const orgTypeData: OrgTypeData[] = [
-    { name: 'Higher Education (HES)', value: 34370, percent: 34.28 },
-    { name: 'Private Company (PRC)', value: 30129, percent: 30.05 },
-    { name: 'Research Org (REC)', value: 22471, percent: 22.42 },
-    { name: 'Other (OTH)', value: 8114, percent: 8.09 },
-    { name: 'Public Body (PUB)', value: 5141, percent: 5.13 },
-  ];
-
-  // Project coordinator type data
-  const coordinatorTypeData: CoordinatorTypeData[] = [
-    { name: 'Higher Education (HES)', value: 8682 },
-    { name: 'Research Org (REC)', value: 4344 },
-    { name: 'Private Company (PRC)', value: 1847 },
-    { name: 'Other (OTH)', value: 346 },
-    { name: 'Public Body (PUB)', value: 121 },
+    { name: 'Higher Education', value: 34370, percent: 34.28 },
+    { name: 'Private Company', value: 30129, percent: 30.05 },
+    { name: 'Research Org', value: 22471, percent: 22.42 },
+    { name: 'Other', value: 8114, percent: 8.09 },
+    { name: 'Public Body', value: 5141, percent: 5.13 },
   ];
 
   // Organizations per project distribution
@@ -270,107 +245,120 @@ const EUResearchNetworkDashboard = () => {
     { degree: '9-16', nodes: 3840 },
     { degree: '17-32', nodes: 3522 },
     { degree: '33-64', nodes: 3018 },
-    { degree: '65-2^{7}', nodes: 2408 },
-    { degree: '129-2^{8}', nodes: 1506 },
-    { degree: '257-2^{9}', nodes: 712 },
-    { degree: '513-2^{10}', nodes: 278 },
-    { degree: '> 2^{10}', nodes: 62 },
+    { degree: '65-128', nodes: 2408 },
+    { degree: '129-256', nodes: 1506 },
+    { degree: '257-512', nodes: 712 },
+    { degree: '513-1024', nodes: 278 },
+    { degree: '> 1024', nodes: 62 },
   ];
 
-  // Helper function to render degree labels with LaTeX
-  const renderDegreeLabel = (degree: string) => {
-    if (degree.includes('^')) {
-      return <InlineMath math={degree} />;
-    }
-    return degree;
-  };
 
-  // COLORS
+  // COLORS palette
   const COLORS = [
-    '#0088FE',
-    '#00C49F',
-    '#FFBB28',
-    '#FF8042',
-    '#8884d8',
-    '#82ca9d',
-    '#ffc658',
-    '#8dd1e1',
+    '#00D9FF', // cyan
+    '#7C3AED', // purple
+    '#10B981', // emerald
+    '#F59E0B', // amber
+    '#EF4444', // red
+    '#3B82F6', // blue
+    '#EC4899', // pink
+    '#8B5CF6', // violet
   ];
 
-  // Custom tick component for LaTeX rendering
-  const CustomTick = (props: any) => {
-    const { x, y, payload } = props;
-    return (
-      <g transform={`translate(${x},${y})`}>
-        <text x={0} y={0} dy={16} textAnchor="middle" fill="#666" fontSize="12">
-          {payload.value.includes('^') ? (
-            <foreignObject x={-20} y={-8} width={40} height={20}>
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-                <InlineMath math={payload.value} />
-              </div>
-            </foreignObject>
-          ) : (
-            payload.value
-          )}
-        </text>
-      </g>
-    );
+  // Custom X-axistick component 
+  const CustomTick = ({ x, y, payload }: any) => (
+    <g transform={`translate(${x},${y})`}>
+      <text x={0} y={0} dy={16} textAnchor="middle" fill="#666" fontSize={12}>
+        {payload.value}
+      </text>
+    </g>
+  );
+
+  // Loading skeleton component
+  const LoadingSkeleton = () => (
+    <div className="animate-pulse">
+      <div className="h-8 bg-gray-700 rounded-lg w-3/4 mb-4"></div>
+      <div className="h-64 bg-gray-700 rounded-lg"></div>
+    </div>
+  );
+
+  // Animated number counter
+  const AnimatedNumber = ({ value, duration = 2000 }: { value: number; duration?: number }) => {
+    const [displayValue, setDisplayValue] = useState(0);
+    const ref = useRef(null);
+    const isInView = useInView(ref, { once: true });
+
+    useEffect(() => {
+      if (isInView) {
+        const startTime = Date.now();
+        const timer = setInterval(() => {
+          const elapsed = Date.now() - startTime;
+          const progress = Math.min(elapsed / duration, 1);
+          const easeOut = 1 - Math.pow(1 - progress, 3);
+          setDisplayValue(Math.floor(value * easeOut));
+          if (progress === 1) clearInterval(timer);
+        }, 16);
+        return () => clearInterval(timer);
+      }
+    }, [isInView, value, duration]);
+
+    return <span ref={ref}>{displayValue.toLocaleString()}</span>;
   };
 
-  // Custom chart components with animations
-  const AnimatedBarChart = ({ data, dataKey, xAxisKey, height = 300, color = "#82ca9d", customXAxisTick = false, labelPrefix = "", valueLabel = "Value", showInBillions = false, ...props }: AnimatedBarChartProps) => {
+  // Custom chart components with enhanced animations
+  const AnimatedBarChart = ({ data, dataKey, xAxisKey, height = 300, color = "#00D9FF", customXAxisTick = false, labelPrefix = "", valueLabel = "Value", showInBillions = false, ...props }: AnimatedBarChartProps) => {
     const chartRef = useRef(null);
     const isInView = useInView(chartRef, { once: false });
-    
+
     return (
       <motion.div 
         ref={chartRef}
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.9 }}
         transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1.0] }}
         style={{ width: '100%', height }}
       >
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} {...props}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <defs>
+              <linearGradient id={`gradient-${dataKey}`} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={color} stopOpacity={0.8} />
+                <stop offset="100%" stopColor={color} stopOpacity={0.3} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(148, 163, 184, 0.1)" />
             <XAxis 
               dataKey={xAxisKey} 
-              tick={customXAxisTick ? <CustomTick /> : { fill: '#666', fontSize: 12 }} 
+              tick={customXAxisTick ? <CustomTick /> : { fill: '#94a3b8', fontSize: 11 }} 
+              axisLine={{ stroke: '#475569' }}
             />
             <YAxis 
-              tick={{ fill: '#666', fontSize: 12 }} 
+              tick={{ fill: '#94a3b8', fontSize: 11 }} 
               tickFormatter={showInBillions ? (value: any) => `${(Number(value) / 1000000000).toFixed(1)}B` : undefined}
+              axisLine={{ stroke: '#475569' }}
             />
             <Tooltip 
               contentStyle={{ 
-                backgroundColor: 'rgba(255, 255, 255, 0.95)', 
-                borderRadius: '8px', 
-                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)', 
-                border: 'none' 
-              }} 
-              formatter={(value: any, name: any) => {
+                backgroundColor: 'rgba(15, 23, 42, 0.95)', 
+                borderRadius: '12px', 
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)', 
+                border: '1px solid rgba(148, 163, 184, 0.2)',
+                backdropFilter: 'blur(10px)'
+              }}
+              itemStyle={{ color: '#e2e8f0' }}
+              labelStyle={{ color: '#cbd5e1' }}
+              formatter={(value: any) => {
                 if (showInBillions) {
                   const billionValue = (Number(value) / 1000000000).toFixed(2);
-                  return [`${billionValue}B ${valueLabel.includes('€') ? '€' : ''}`, valueLabel.replace('€', '').trim()];
+                  return [`€${billionValue}B`, valueLabel.replace('€', '').trim()];
                 }
                 return [
                   `${Number(value).toLocaleString()}${valueLabel.includes('€') ? '' : ` ${valueLabel.toLowerCase()}`}`,
                   valueLabel
                 ];
               }}
-              labelFormatter={(label: any) => {
-                if (typeof label === 'string' && label.includes('^')) {
-                  return (
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <span>{labelPrefix} </span>
-                      <InlineMath math={label} />
-                    </div>
-                  );
-                }
-                return `${labelPrefix}${label}`;
-              }}
             />
-            <Bar dataKey={dataKey} fill={color} radius={[4, 4, 0, 0]} />
+            <Bar dataKey={dataKey} fill={`url(#gradient-${dataKey})`} radius={[8, 8, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </motion.div>
@@ -437,10 +425,11 @@ const EUResearchNetworkDashboard = () => {
     );
   };
 
-  // Custom card component with animation
+  // Custom card component with glassmorphism effects
   const BentoCard = ({ children, className = "", size = "md", ...props }: BentoCardProps) => {
     const cardRef = useRef(null);
     const isInView = useInView(cardRef, { once: false });
+    const [isHovered, setIsHovered] = useState(false);
     
     const sizeClasses: Record<string, string> = {
       sm: "col-span-1",
@@ -449,136 +438,263 @@ const EUResearchNetworkDashboard = () => {
       xl: "col-span-1 md:col-span-3",
       full: "col-span-1 md:col-span-4",
     };
+
+    const handleMouseEnter = () => setIsHovered(true);
+    const handleMouseLeave = () => setIsHovered(false);
     
     return (
       <motion.div
         ref={cardRef}
-        className={`bg-white rounded-2xl shadow-lg overflow-hidden ${sizeClasses[size]} ${className}`}
+        className={`group relative ${sizeClasses[size]} ${className}`}
         initial={{ opacity: 0, y: 30 }}
         animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 30 }}
         transition={{ duration: 0.6, ease: [0.25, 0.1, 0.25, 1.0] }}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
         {...props}
       >
-        <div className="p-6 h-full">{children}</div>
+        {/* Glassmorphism container */}
+        <motion.div
+          className="relative h-full rounded-2xl overflow-hidden"
+          animate={{
+            scale: isHovered ? 1.02 : 1,
+          }}
+          transition={{
+            type: "spring",
+            stiffness: 300,
+            damping: 30,
+          }}
+        >
+          {/* Background glass layer */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/20 via-white/10 to-white/5 backdrop-blur-xl" />
+          
+          {/* Border gradient */}
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-white/40 via-transparent to-transparent p-[1px]">
+            <div className="h-full w-full rounded-2xl bg-gradient-to-br from-white/10 via-white/5 to-transparent" />
+          </div>
+          
+          {/* Shimmer effect */}
+          <motion.div
+            className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            animate={{
+              background: isHovered
+                ? `linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%)`
+                : "transparent",
+            }}
+          />
+          
+          {/* Content container */}
+          <div className="relative h-full p-6 z-10">
+            {children}
+          </div>
+          
+          {/* Floating particles effect */}
+          <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-2xl">
+            {[...Array(6)].map((_, i) => (
+              <motion.div
+                key={i}
+                className="absolute w-1 h-1 bg-white/30 rounded-full"
+                initial={{
+                  x: Math.random() * 100 + "%",
+                  y: Math.random() * 100 + "%",
+                }}
+                animate={{
+                  y: isHovered ? ["-10%", "110%"] : "50%",
+                  opacity: isHovered ? [0, 1, 0] : 0,
+                }}
+                transition={{
+                  duration: 2 + Math.random() * 2,
+                  repeat: isHovered ? Infinity : 0,
+                  delay: i * 0.2,
+                  ease: "linear",
+                }}
+              />
+            ))}
+          </div>
+          
+          {/* Shadow layer */}
+          <motion.div
+            className="absolute -inset-2 bg-gradient-to-br from-blue-500/10 via-purple-500/5 to-pink-500/10 rounded-3xl blur-xl -z-10"
+            animate={{
+              scale: isHovered ? 1.05 : 1,
+              opacity: isHovered ? 0.8 : 0.3,
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 300,
+              damping: 30,
+            }}
+          />
+        </motion.div>
       </motion.div>
     );
   };
 
-  // Custom section header with oversized typography
-  const SectionHeader = ({ children, className = "", ...props }: SectionHeaderProps) => {
+  // Custom section header with gradient text
+  const SectionHeader = ({ children, subtitle, className = "", ...props }: SectionHeaderProps) => {
     return (
-      <motion.h2 
-        className={`text-4xl md:text-6xl font-black mb-8 text-gray-800 tracking-tight ${className}`}
+      <motion.div
+        className={`mb-12 ${className}`}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1.0] }}
         {...props}
       >
-        {children}
-      </motion.h2>
+        <h2 className="text-5xl md:text-7xl font-black mb-4 bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
+          {children}
+        </h2>
+        {subtitle && (
+          <p className="text-lg text-gray-400 max-w-3xl">
+            {subtitle}
+          </p>
+        )}
+      </motion.div>
     );
   };
 
-  // Custom stat display with oversized typography
-  const StatDisplay = ({ label, value, icon, color = "blue" }: StatDisplayProps) => {
+  // Custom stat display with animated numbers and formulas
+  const StatDisplay = ({ label, value, icon, color = "blue", formula }: StatDisplayProps) => {
     const colorClasses: Record<string, string> = {
-      blue: "text-blue-600",
-      green: "text-green-600",
-      amber: "text-amber-600",
-      purple: "text-purple-600",
-      pink: "text-pink-600",
+      blue: "from-blue-400 to-blue-600",
+      green: "from-green-400 to-green-600",
+      amber: "from-amber-400 to-amber-600",
+      purple: "from-purple-400 to-purple-600",
+      pink: "from-pink-400 to-pink-600",
+      cyan: "from-cyan-400 to-cyan-600",
     };
-    
+
     return (
-      <div className="flex flex-col">
-        <div className="flex items-center mb-2">
-          <span className={`material-icons mr-2 ${colorClasses[color]}`}>{icon}</span>
-          <span className="text-gray-600 text-sm">{label}</span>
+      <div className="flex flex-col h-full">
+        <div className="flex items-center mb-3">
+          <div className={`p-3 rounded-xl bg-gradient-to-br ${colorClasses[color]} shadow-lg`}>
+            <span className="material-icons text-white text-2xl">{icon}</span>
+          </div>
+          <span className="text-gray-400 text-sm ml-3">{label}</span>
         </div>
-        <div className="text-3xl md:text-4xl font-bold">
-          {typeof value === 'number' && value < 1
-            ? value.toFixed(6)
-            : value.toLocaleString()}
+        <div className="text-4xl md:text-5xl font-bold text-gray-800 mb-3">
+          <AnimatedNumber value={value} />
         </div>
+        {formula && (
+          <div className="mt-auto pt-4 border-t border-gray-700/50">
+            <InlineMath math={formula} />
+          </div>
+        )}
       </div>
     );
   };
 
+
+  
   return (
     <div className="min-h-screen bg-gray-50 font-['Inter']">
+      
       {/* Hero section with oversized typography */}
       <motion.div 
-        className="relative overflow-hidden bg-gradient-to-br from-blue-900 to-indigo-900 text-white py-20 px-6"
+        className="relative overflow-hidden bg-gradient-to-br from-blue-700 to-purple-800 text-white py-20 px-6"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 1 }}
       >
         <div className="max-w-7xl mx-auto">
           <motion.h1 
-            className="text-5xl md:text-8xl font-black mb-4 tracking-tight"
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.8 }}
-          >
-            EU Research<br />Network
+              className="text-6xl md:text-9xl font-black mb-6 tracking-tight"
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.8 }}
+            >
+              <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
+                EU Research
+              </span>
+              <br />
+              <span className="text-white">Network</span>
           </motion.h1>
           <motion.p 
-            className="text-xl md:text-2xl font-light max-w-2xl mb-8"
+            className="text-xl md:text-2xl font-light max-w-3xl mb-8 text-gray-300"
             initial={{ y: 50, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.4, duration: 0.8 }}
           >
-            Analyzing collaboration patterns across 27,000+ organizations in the European research ecosystem (2021-2027)
+            Analyzing patterns across 27,000+ organizations in the European research ecosystem (2021-2027)
           </motion.p>
           
-          {/* Abstract network visualization as line art */}
+          {/* Animated network visualization */}
           <motion.div 
-            className="absolute right-0 top-0 w-1/2 h-full opacity-20"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.2 }}
+            className="absolute right-0 top-0 -translate-y-1/4 w-1/2 h-full opacity-20"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 0.3, scale: 1 }}
             transition={{ delay: 0.8, duration: 1.5 }}
           >
             <svg viewBox="0 0 800 600" xmlns="http://www.w3.org/2000/svg" className="w-full h-full">
-              <g stroke="white" fill="none" strokeWidth="1.5">
-                <circle cx="400" cy="300" r="100" />
-                <circle cx="400" cy="300" r="200" />
-                <line x1="200" y1="300" x2="600" y2="300" />
-                <line x1="400" y1="100" x2="400" y2="500" />
-                <line x1="250" y1="150" x2="550" y2="450" />
-                <line x1="250" y1="450" x2="550" y2="150" />
-                <circle cx="200" cy="300" r="20" />
-                <circle cx="600" cy="300" r="20" />
-                <circle cx="400" cy="100" r="20" />
-                <circle cx="400" cy="500" r="20" />
-                <circle cx="250" cy="150" r="15" />
-                <circle cx="550" cy="450" r="15" />
-                <circle cx="250" cy="450" r="15" />
-                <circle cx="550" cy="150" r="15" />
+              <defs>
+                <linearGradient id="networkGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#00D9FF" stopOpacity="0.6" />
+                  <stop offset="100%" stopColor="#7C3AED" stopOpacity="0.6" />
+                </linearGradient>
+              </defs>
+              <g stroke="url(#networkGradient)" fill="none" strokeWidth="2">
+                {/* Animated network paths */}
+                {[...Array(8)].map((_, i) => {
+                  const angle = (i / 8) * Math.PI * 2;
+                  const x1 = 400 + Math.cos(angle) * 150;
+                  const y1 = 300 + Math.sin(angle) * 150;
+                  return (
+                    <motion.line
+                      key={i}
+                      x1="400"
+                      y1="300"
+                      x2={x1}
+                      y2={y1}
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: 2, delay: i * 0.1, repeat: Infinity, repeatType: "reverse" }}
+                    />
+                  );
+                })}
+                {/* Central node */}
+                <circle cx="400" cy="300" r="10" fill="#00D9FF" />
+                {/* Outer nodes */}
+                {[...Array(8)].map((_, i) => {
+                  const angle = (i / 8) * Math.PI * 2;
+                  const x = 400 + Math.cos(angle) * 150;
+                  const y = 300 + Math.sin(angle) * 150;
+                  return (
+                    <motion.circle
+                      key={i}
+                      cx={x}
+                      cy={y}
+                      r="6"
+                      fill="#7C3AED"
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ duration: 0.5, delay: 0.5 + i * 0.1 }}
+                    />
+                  );
+                })}
               </g>
             </svg>
           </motion.div>
         </div>
       </motion.div>
 
-      {/* Navigation tabs */}
-      <div className="sticky top-0 z-10 bg-white shadow-md">
+      {/* Navigation tabs with glassmorphism */}
+      <div className="sticky top-0 z-20 bg-gray-900/80 backdrop-blur-xl border-b border-gray-800">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex overflow-x-auto py-4">
+          <div className="flex overflow-x-auto py-4 gap-3">
             {['overview', 'countries', 'topics'].map((tab) => (
               <motion.button
                 key={tab}
-                className={`py-2 px-6 font-medium whitespace-nowrap mx-2 rounded-full transition-all ${
+                className={`py-3 px-8 font-medium whitespace-nowrap rounded-full transition-all ${
                   activeTab === tab
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'text-gray-600 hover:bg-gray-100'
+                    ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/25'
+                    : 'text-gray-400 hover:text-white bg-gray-800/50 hover:bg-gray-800'
                 }`}
                 onClick={() => setActiveTab(tab)}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <div className="flex items-center">
-                  <span className="material-icons mr-2">
-                    {tab === 'overview' ? 'dashboard' : tab === 'countries' ? 'public' : 'topic'}
+                <div className="flex items-center gap-2">
+                  <span className="material-icons text-lg">
+                    {tab === 'overview' ? 'hub' : tab === 'countries' ? 'public' : 'category'}
                   </span>
                   {tab.charAt(0).toUpperCase() + tab.slice(1)}
                 </div>
@@ -606,7 +722,7 @@ const EUResearchNetworkDashboard = () => {
                     label={metric.name} 
                     value={metric.value} 
                     icon={metric.icon} 
-                    color={(['blue', 'green', 'amber', 'purple'] as const)[index % 4]} 
+                    color={(['cyan', 'green', 'amber', 'purple'] as const)[index % 4]} 
                   />
                 </BentoCard>
               ))}
@@ -615,80 +731,91 @@ const EUResearchNetworkDashboard = () => {
             {/* Network insights in bento grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
               <BentoCard size="md">
-                <h3 className="text-2xl font-bold mb-4 text-gray-800">Network Interpretation</h3>
-                <div className="flex items-start mb-6">
-                  <span className="material-icons text-blue-600 mr-3 text-3xl">insights</span>
-                  <p className="text-gray-600">
-                    The EU research collaboration network shows very low density but high average degree (56.48), indicating a
-                    sparse network with <strong>centralized collaboration hubs</strong>.
-                  </p>
-                </div>
-                <div className="flex items-start">
-                  <span className="material-icons text-amber-600 mr-3 text-3xl">trending_up</span>
-                  <p className="text-gray-600">
-                    The network appears to follow a <strong>power-law degree distribution</strong>, suggesting new organizations tend to collaborate with hub institutions.
-                  </p>
-                </div>
+              <h3 className="text-2xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+                Network Interpretation
+              </h3>
+              <div className="flex items-start mb-6">
+                <span className="material-icons text-cyan-400 mr-3 text-2xl">insights</span>
+                <p className="text-gray-600">
+                  The EU research collaboration network shows very low density but high average degree (56.48), indicating a
+                  sparse network with <strong>centralized collaboration hubs</strong>.
+                </p>
+              </div>
+              <div className="flex items-start">
+                <span className="material-icons text-amber-600 mr-3 text-3xl">trending_up</span>
+                <p className="text-gray-600">
+                  The network appears to follow a <strong>power-law degree distribution</strong>, suggesting new organizations tend to collaborate with hub institutions.
+                </p>
+              </div>
               </BentoCard>
               
               <BentoCard size="lg">
-                <h3 className="text-2xl font-bold mb-4 text-gray-800">Degree Distribution</h3>
-                <AnimatedBarChart 
-                  data={degreeDistribution} 
-                  dataKey="nodes" 
-                  xAxisKey="degree" 
-                  color="#8884d8"
-                  customXAxisTick={true}
-                  labelPrefix="Degree range: "
-                  valueLabel="Nodes"
-                />
+                <h3 className="text-2xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">
+                    Degree Distribution
+                  </h3>
+                  <AnimatedBarChart 
+                    data={degreeDistribution} 
+                    dataKey="nodes" 
+                    xAxisKey="degree" 
+                    color="#8B5CF6"
+                    customXAxisTick={true}
+                    height={250}
+                    valueLabel="Nodes"
+                  />
               </BentoCard>
             </div>
             
             {/* Top organizations */}
-            <BentoCard size="full" className="mb-12">
-              <h3 className="text-2xl font-bold mb-4 text-gray-800">Top 10 Organizations by Connections</h3>
-              <p className="text-gray-600 mb-6">
-                These organizations are the most connected hubs in the EU research ecosystem. 
-                German institution <strong>Fraunhofer-Gesellschaft</strong> leads with 5,312 connections, while <strong>KU Leuven </strong> ranks the fifth with 3,467 connections.
-              </p>
-              <AnimatedBarChart 
-                data={topOrganizations} 
-                dataKey="degree" 
-                xAxisKey="name" 
-                color="#82ca9d"
-                height={350}
-                labelPrefix="Organization: "
-                valueLabel="Connections"
-              />
+            <BentoCard size="full" className="mb-16">
+                <h3 className="text-3xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500">
+                  Network Hubs: Top 10 Organizations
+                </h3>
+                <p className="text-gray-400 mb-8">
+                  The most connected nodes exhibit extreme centrality. <strong className="text-cyan-400">Fraunhofer-Gesellschaft</strong> leads with 
+                  <InlineMath math="5,312" /> connections, while <strong className="text-purple-400">KU Leuven </strong> 
+                  ranks 5th with <InlineMath math="3,467" /> connections.
+                </p>
+                <AnimatedBarChart 
+                  data={topOrganizations} 
+                  dataKey="degree" 
+                  xAxisKey="name" 
+                  color="green"
+                  height={400}
+                  valueLabel="Degree"
+                />
             </BentoCard>
+
             
             {/* Organization types and roles */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
               <BentoCard>
-                <h3 className="text-2xl font-bold mb-4 text-gray-800">Organization Types</h3>
+              <h3 className="text-3xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-pink-500">
+                  Organization Types
+                </h3>
                 <AnimatedPieChart 
                   data={orgTypeData} 
                   dataKey="value" 
                   nameKey="name"
                 />
                 <p className="text-gray-600 mt-4">
-                  Higher Education institutions (HES) make up the largest
+                  Higher Education institutions make up the largest
                   portion of participating organizations at 34.3%, followed
-                  closely by Private Companies (PRC) at 30.1%.
+                  closely by Private Companies at 30.1%.
                 </p>
               </BentoCard>
               
               <BentoCard>
-                <h3 className="text-2xl font-bold mb-4 text-gray-800">Network Roles</h3>
+                <h3 className="text-3xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-cyan-400">
+                  Network Roles
+                </h3>
                 <div className="space-y-4">
                   <div className="flex items-start">
                     <div className="bg-blue-100 p-2 rounded-full mr-3">
                       <span className="material-icons text-blue-600">stars</span>
                     </div>
                     <div>
-                      <h4 className="font-bold text-gray-800">Tier 1: Super-connectors</h4>
-                      <p className="text-gray-600">Top 10 organizations each connect to 2,800+ partners, forming the core of the EU research network.</p>
+                      <h4 className="font-bold text-gray-800">Tier 1</h4>
+                      <p className="text-gray-600">Top 10 organizations each connect to 2,800+ partners, forming the <strong className="text-blue-600">core of the EU research network.</strong></p>
                     </div>
                   </div>
                   
@@ -697,7 +824,7 @@ const EUResearchNetworkDashboard = () => {
                       <span className="material-icons text-green-600">hub</span>
                     </div>
                     <div>
-                      <h4 className="font-bold text-gray-800">Tier 2: Major hubs</h4>
+                      <h4 className="font-bold text-gray-800">Tier 2</h4>
                       <p className="text-gray-600">~250 organizations with 500-2,800 connections each, serving as sectoral or regional hubs.</p>
                     </div>
                   </div>
@@ -707,7 +834,7 @@ const EUResearchNetworkDashboard = () => {
                       <span className="material-icons text-amber-600">group_work</span>
                     </div>
                     <div>
-                      <h4 className="font-bold text-gray-800">Tier 3: Active collaborators</h4>
+                      <h4 className="font-bold text-gray-800">Tier 3</h4>
                       <p className="text-gray-600">~3,000 organizations with 100-500 connections, representing active but specialized research entities.</p>
                     </div>
                   </div>
@@ -717,7 +844,7 @@ const EUResearchNetworkDashboard = () => {
                       <span className="material-icons text-purple-600">person</span>
                     </div>
                     <div>
-                      <h4 className="font-bold text-gray-800">Tier 4: Peripheral participants</h4>
+                      <h4 className="font-bold text-gray-800">Tier 4</h4>
                       <p className="text-gray-600">Remaining organizations with fewer than 100 connections, predominantly participating in fewer projects.</p>
                     </div>
                   </div>
@@ -729,15 +856,21 @@ const EUResearchNetworkDashboard = () => {
 
         {activeTab === 'countries' && (
           <motion.div
+            key="countries"
             initial="hidden"
             animate="visible"
+            exit="hidden"
             variants={staggerContainer}
           >
-            <SectionHeader>Country Analysis</SectionHeader>
+            <SectionHeader subtitle="Geographic distribution and cross-border collaboration patterns">
+                Country Analysis
+            </SectionHeader>
             
             {/* Country participation */}
             <BentoCard size="full" className="mb-12">
-              <h3 className="text-2xl font-bold mb-4 text-gray-800">Country Participation</h3>
+              <h3 className="text-3xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+                Participation by Country
+              </h3>
               <AnimatedBarChart 
                 data={countryData} 
                 dataKey="participations" 
@@ -747,25 +880,43 @@ const EUResearchNetworkDashboard = () => {
                 labelPrefix="Country: "
                 valueLabel="Participations"
               />
+              <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                {countryData.slice(0, 4).map((country, idx) => (
+                  <div key={country.name} className="bg-white-1 rounded-lg p-4 text-center">
+                    <p className="text-2xl font-bold text-cyan-400">{idx + 1}</p>
+                    <p className="text-lg font-semibold">{country.name}</p>
+                    <p className="text-sm text-gray-400">{country.participations.toLocaleString()}</p>
+                  </div>
+                ))}
+              </div>
             </BentoCard>
             
             {/* Country funding and collaborations */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
               <BentoCard>
-                <h3 className="text-2xl font-bold mb-4 text-gray-800">Funding by Country (€)</h3>
-                <AnimatedBarChart 
-                  data={countryData} 
-                  dataKey="funding" 
-                  xAxisKey="name" 
-                  color="#00C49F"
-                  labelPrefix="Country: "
-                  valueLabel="Funding"
-                  showInBillions={true}
-                />
-              </BentoCard>
+                  <h3 className="text-2xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500">
+                    Funding Distribution
+                  </h3>
+                  <AnimatedBarChart 
+                    data={countryData} 
+                    dataKey="funding" 
+                    xAxisKey="name" 
+                    color="#10B981"
+                    height={300}
+                    valueLabel="Funding"
+                    showInBillions={true}
+                  />
+                  <div className="mt-4 bg-white-1 rounded-lg p-4">
+                    <p className="text-sm text-gray-400">
+                      Total funding: <span className="text-green-400 font-semibold">€93.5B</span>
+                    </p>
+                  </div>
+                </BentoCard>
               
               <BentoCard>
-                <h3 className="text-2xl font-bold mb-4 text-gray-800">Top Country Collaborations</h3>
+                <h3 className="text-3xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">
+                  Collaboration Patterns
+                </h3>
                 <AnimatedBarChart 
                   data={countryCollaborations} 
                   dataKey="value" 
@@ -774,12 +925,19 @@ const EUResearchNetworkDashboard = () => {
                   labelPrefix="Collaboration: "
                   valueLabel="Joint Projects"
                 />
+                <div className="mt-4 bg-white-1 rounded-lg p-4">
+                  <p className="text-sm text-gray-400">
+                    Spain-Itaily show the strongest collaboration pattern with <span className="text-green-400 font-semibold">20,322</span> joint projects.
+                  </p>
+                </div>
               </BentoCard>
             </div>
             
             {/* Country insights */}
             <BentoCard size="full" className="mb-12">
-              <h3 className="text-2xl font-bold mb-4 text-gray-800">Country Insights</h3>
+            <h3 className="text-3xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+              Insights
+            </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="flex flex-col">
                   <div className="bg-blue-100 p-4 rounded-xl mb-4">
@@ -811,47 +969,81 @@ const EUResearchNetworkDashboard = () => {
 
         {activeTab === 'topics' && (
           <motion.div
+            key="topics"
             initial="hidden"
             animate="visible"
+            exit="hidden"
             variants={staggerContainer}
           >
             <SectionHeader>Research Topics</SectionHeader>
             
             {/* Top research topics */}
-            <BentoCard size="full" className="mb-12">
-              <h3 className="text-2xl font-bold mb-4 text-gray-800">Top Research Topics</h3>
-              <AnimatedBarChart 
-                data={topTopics} 
-                dataKey="projects" 
-                xAxisKey="name" 
-                color="#8884d8"
-                height={350}
-                labelPrefix="Topic: "
-                valueLabel="Projects"
-              />
-            </BentoCard>
+            <BentoCard size="full" className="mb-16">
+                <h3 className="text-3xl font-bold mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500">
+                  Leading Research Programs
+                </h3>
+                <AnimatedBarChart 
+                  data={topTopics} 
+                  dataKey="projects" 
+                  xAxisKey="name" 
+                  color="#8B5CF6"
+                  height={400}
+                  valueLabel="Projects"
+                />
+                <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-white-1 rounded-xl p-4 border border-purple-500/30">
+                    <h4 className="font-semibold text-purple-400 mb-2">ERC Grants</h4>
+                    <p className="text-2xl font-bold">3,857</p>
+                  </div>
+                  <div className="bg-white-1 rounded-xl p-4 border border-blue-500/30">
+                    <h4 className="font-semibold text-blue-400 mb-2">MSCA Actions</h4>
+                    <p className="text-2xl font-bold">4,132</p>
+                  </div>
+                  <div className="bg-white-1 rounded-xl p-4 border border-pink-500/30">
+                    <h4 className="font-semibold text-pink-400 mb-2">Gender Balance</h4>
+                    <p className="text-2xl font-bold">179</p>
+                  </div>
+                </div>
+              </BentoCard>
             
             {/* Project duration and organizations per project */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
               <BentoCard>
-                <h3 className="text-2xl font-bold mb-4 text-gray-800">Project Duration</h3>
+                <h3 className="text-2xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-500">
+                  Project Duration
+                </h3>
                 <AnimatedPieChart 
                   data={durationData} 
                   dataKey="projects" 
                   nameKey="name"
+                  height={300}
                 />
+                <div className="mt-4 bg-white-1 rounded-lg p-4">
+                  <p className="text-sm text-gray-400">
+                    Average duration: <InlineMath math="\mu = 2.84" /> years;  
+                    Standard deviation: <InlineMath math="\sigma = 1.37" /> years
+                  </p>
+                </div>
               </BentoCard>
               
               <BentoCard>
-                <h3 className="text-2xl font-bold mb-4 text-gray-800">Organizations per Project</h3>
+                <h3 className="text-2xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500">
+                  Consortium Size Distribution
+                </h3>
                 <AnimatedBarChart 
                   data={orgsPerProjectData} 
                   dataKey="count" 
                   xAxisKey="range" 
-                  color="#FF8042"
-                  labelPrefix="Project size: "
+                  color="#EF4444"
+                  height={300}
                   valueLabel="Projects"
                 />
+
+                <div className="mt-4 bg-white-1 rounded-lg p-4">
+                  <p className="text-sm text-gray-400">
+                    Most projects involve 7-20 organizations, excluding single-organization projects.
+                  </p>
+                </div>
               </BentoCard>
             </div>
             
@@ -907,29 +1099,36 @@ const EUResearchNetworkDashboard = () => {
       </div>
       
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12 px-6">
+      <footer className="relative z-10 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 border-t border-gray-800 py-16 px-6">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between">
-            <div className="mb-8 md:mb-0">
-              <h3 className="text-2xl font-bold mb-4">EU Research Network Dashboard</h3>
-              <p className="text-gray-400 max-w-md">
-                A comprehensive analysis of research collaboration patterns across the European Union's Horizon Europe program (2021-2027).
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            <div>
+              <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
+                EU Research Network
+              </h3>
+              <p className="text-gray-400">
+                A comprehensive analysis of research collaboration in Horizon Europe (2021-2027)
               </p>
             </div>
             <div>
-              <h4 className="font-bold text-lg mb-4">Data Sources</h4>
-              <ul className="text-gray-400">
-                <li className="mb-2">
-                  <a href = "https://data.europa.eu/data/datasets/cordis-eu-research-projects-under-horizon-europe-2021-2027?locale=en" 
-                  target="_blank" rel="noopener noreferrer">
-                  EU Open Data Portal
-                  </a>
-                </li>
-              </ul>
+              <h4 className="text-lg font-semibold mb-4 text-gray-300">Network Analysis</h4>
+        
+            </div>
+            <div>
+              <h4 className="text-lg font-semibold mb-4 text-gray-300">Data Source</h4>
+              <a 
+                href="https://data.europa.eu/data/datasets/cordis-eu-research-projects-under-horizon-europe-2021-2027?locale=en" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-2"
+              >
+                EU Open Data Portal
+                <span className="material-icons text-sm">open_in_new</span>
+              </a>
             </div>
           </div>
-          <div className="border-t border-gray-800 mt-8 pt-8 text-gray-500 text-sm">
-            © {new Date().getFullYear()} EU Research Network Analysis. All rights reserved.
+          <div className="border-t border-gray-800 pt-8 text-center text-gray-500">
+            <p>EU Research Network Analysis • Built with React & Recharts</p>
           </div>
         </div>
       </footer>
